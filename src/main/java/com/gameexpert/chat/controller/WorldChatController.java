@@ -2,6 +2,7 @@ package com.gameexpert.chat.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,8 +20,9 @@ public class WorldChatController {
 
     private final RecentChatQueryService chatService;
 
+    @GetMapping("/worlds/{worldId}/chats")
     // TODO Lv 6: API 명세에 맞는 요청 매핑과 응답을 구현합니다.
-    public ResponseEntity<List<ChatMessageResponse>> chats(Long worldId, int limit) {
-        return ResponseEntity.ok(List.of());
+    public ResponseEntity<List<ChatMessageResponse>> chats(@PathVariable Long worldId,@RequestParam(defaultValue = "50") int limit ) {
+        return ResponseEntity.status(HttpStatus.OK).body(chatService.getRecentMessages(worldId,limit));
     }
 }

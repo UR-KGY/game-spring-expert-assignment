@@ -6,6 +6,7 @@ import com.gameexpert.common.NotFoundException;
 import com.gameexpert.world.repository.WorldRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -14,6 +15,7 @@ public class RecentChatQueryService {
     private final RecentChatCache cache;
     private final WorldRepository worlds;
 
+    @Transactional(readOnly = true)
     public List<ChatMessageResponse> getRecentMessages(Long worldId, int limit) {
         if (!worlds.existsById(worldId)) {
             throw new NotFoundException("WORLD_NOT_FOUND");

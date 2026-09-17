@@ -24,7 +24,7 @@ class RecentChatApiTest {
         mvc = MockMvcBuilders.standaloneSetup(new WorldChatController(service)).build();
     }
 
-    // @Test
+     @Test
     void returnsServiceResultsInOrderWithRequestedLimit() throws Exception {
         when(service.getRecentMessages(42L, 2)).thenReturn(List.of(
                 new ChatMessageResponse("Alice", "안녕", LocalDateTime.of(2026, 1, 2, 3, 4, 5)),
