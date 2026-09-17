@@ -66,11 +66,18 @@ public class WorldService {
 
     @Transactional
     public CommittedWorldCreation createWorld(CreateWorldRequest request) {
-        if (!baselineReadiness.isReady()) {
+        if (!baselineReadiness.isReady()) { //아직 조건문 안의 기준은 모르겠다. 일단 무언가 준비되지 않았다면 예외를 던진다.
             throw new ServiceUnavailableException("WORLD_BASELINE_INITIALIZING");
         }
-        // TODO Lv 4: duringCreation() 안에서 기본 월드 3개 제한을 검사하고 createPreparedWorld(request)를 호출합니다.
-        throw new UnsupportedOperationException("Lv 4: 월드 생성을 구현하세요.");
+        return worldOperations.duringCreation(() -> {
+            if (worldRepository.countRootWorlds() >= MAX_WORLDS) { //MAX_WORLD를 기준으로 이미 최대치의 월드가 있다면
+                throw new ConflictException("WORLD_LIMIT_REACHED");
+            }
+
+            return createPreparedWorld(request);
+            // TODO Lv 4: duringCreation() 안에서 기본 월드 3개 제한을 검사하고 createPreparedWorld(request)를 호출합니다
+            //  throw new UnsupportedOperationException("Lv 4: 월드 생성을 구현하세요.");
+        });
     }
 
     // 제공 코드: 생성 잠금 안에서 호출하며 엔진에 전달할 초기 월드 정보를 준비합니다.
@@ -114,7 +121,7 @@ public class WorldService {
 
     @Transactional
     public void deleteWorldIfMatches(Long id, String requesterNickname,
-            ConditionalWorldDeleteRequest expectedIdentity) {
+                                     ConditionalWorldDeleteRequest expectedIdentity) {
         if (!baselineReadiness.isReady()) {
             throw new ServiceUnavailableException("WORLD_BASELINE_INITIALIZING");
         }
@@ -130,7 +137,7 @@ public class WorldService {
     }
 
     private boolean matchesCreationIdentity(World world,
-            ConditionalWorldDeleteRequest expectedIdentity) {
+                                            ConditionalWorldDeleteRequest expectedIdentity) {
         return expectedIdentity != null
                 && world.getName().equals(expectedIdentity.name())
                 && expectedIdentity.seed() != null
