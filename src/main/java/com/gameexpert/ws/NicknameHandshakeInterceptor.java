@@ -39,8 +39,10 @@ public class NicknameHandshakeInterceptor implements HandshakeInterceptor {
     private final WorldBaselineReadiness baselineReadiness;
 
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
-            WebSocketHandler wsHandler, Map<String, Object> attributes) {
+    public boolean beforeHandshake(ServerHttpRequest request,
+                                   ServerHttpResponse response,
+                                   WebSocketHandler wsHandler,
+                                   Map<String, Object> attributes) {
         if (!baselineReadiness.isReady()) {
             response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
             return false;
@@ -53,7 +55,7 @@ public class NicknameHandshakeInterceptor implements HandshakeInterceptor {
         }
 
         // TODO Lv 7: 닉네임으로 플레이어를 조회합니다. 없으면 null을 사용합니다.
-        Player player = null;
+        Player player = playerRepository.findByNickname(nickname).orElse(null);
         if (player == null) {
             attributes.put(ATTR_ERROR_CODE, 4000);
             return true;
@@ -65,13 +67,15 @@ public class NicknameHandshakeInterceptor implements HandshakeInterceptor {
             return true;
         }
         // TODO Lv 7: worldId로 월드를 조회합니다. 없으면 null을 사용합니다.
-        World world = null;
+        World world = worldRepository.findById(worldId).orElse(null);
         if (world == null || worldRepository.isDimensionChild(worldId)) {
             attributes.put(ATTR_ERROR_CODE, 4001);
             return true;
         }
 
         // TODO Lv 7: nickname과 worldId를 ATTR_NICKNAME, ATTR_WORLD_ID 키로 attributes에 저장합니다.
+        attributes.put(ATTR_NICKNAME,nickname);
+        attributes.put(ATTR_WORLD_ID,worldId);
 
         attributes.put(ATTR_PLAYER_ID, player.getId());
         attributes.put(ATTR_WORLD_SEED, (int) world.getSeed());
