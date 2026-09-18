@@ -35,10 +35,6 @@ dependencies {
 
 apply from: 'gradle/engine.gradle'
 
-test {
+tasks.named('test') {
     useJUnitPlatform()
-    testLogging {
-        showStandardStreams = true
-        events "standard_out", "standard_error"
-    }
 }
