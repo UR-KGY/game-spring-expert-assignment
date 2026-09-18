@@ -1,12 +1,15 @@
 package com.gameexpert.ws;
 
+
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.socket.WebSocketSession;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+@Slf4j
 class WorldSessionRegistryTest {
-    // @Test
+     @Test
     void registersAndFindsConnectionIgnoringNicknameCase() {
         WorldSessionRegistry registry = new WorldSessionRegistry();
         WebSocketSession session = mock(WebSocketSession.class);
@@ -19,7 +22,7 @@ class WorldSessionRegistryTest {
         assertThat(registry.get(12L, "Alex")).isNull();
     }
 
-    // @Test
+     @Test
     void duplicateCannotReplaceOriginalAndDifferentWorldIsIndependent() {
         WorldSessionRegistry registry = new WorldSessionRegistry();
         WebSocketSession original = mock(WebSocketSession.class);
