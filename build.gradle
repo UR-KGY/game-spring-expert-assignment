@@ -31,10 +31,19 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers:1.21.4'
     testRuntimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //테스트 로깅 용도
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 apply from: 'gradle/engine.gradle'
 
-tasks.named('test') {
+
+test {
     useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+        events "standard_out", "standard_error"
+    }
 }
