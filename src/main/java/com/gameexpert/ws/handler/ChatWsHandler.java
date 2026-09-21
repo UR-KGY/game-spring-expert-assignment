@@ -1,22 +1,21 @@
 package com.gameexpert.ws.handler;
 
-import org.springframework.stereotype.Component;
-
-import com.gameexpert.chat.service.ChatService;
-import com.gameexpert.chat.service.ChatDelivery;
 import com.gameexpert.chat.dto.ChatMessageResponse;
-import com.gameexpert.ws.dto.ChatResponse;
+import com.gameexpert.chat.service.ChatDelivery;
 import com.gameexpert.chat.service.ChatRateLimitService;
-import com.gameexpert.ws.NicknameHandshakeInterceptor;
+import com.gameexpert.chat.service.ChatService;
 import com.gameexpert.ws.ChatCommands;
+import com.gameexpert.ws.NicknameHandshakeInterceptor;
 import com.gameexpert.ws.WorldBroadcaster;
 import com.gameexpert.ws.WsMessageContext;
+import com.gameexpert.ws.dto.ChatResponse;
 import com.gameexpert.ws.dto.WsMessages.Error;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 
-import lombok.RequiredArgsConstructor;
-
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChatWsHandler implements WsMessageHandler {
@@ -55,11 +54,20 @@ public class ChatWsHandler implements WsMessageHandler {
 
     private String readContent(JsonNode message) {
         // TODO Lv 13: API 명세의 채팅 내용을 읽습니다.
-        return "";
+        String text = WsFields.text(message,"content");
+        return text;
     }
 
     private ChatResponse createResponse(WsMessageContext context, String content) {
         // TODO Lv 13: 현재 연결의 사용자로 저장하고 명세에 맞는 응답을 만듭니다.
-        return null;
+        ChatMessageResponse chatMessageResponse  = chatService.saveMessage(context.worldId(), context.nickname(), content);
+
+
+        return new ChatResponse(
+                "chat",
+                chatMessageResponse.getSender(),
+                chatMessageResponse.getContent(),
+                chatMessageResponse.getCreatedAt()
+        );
     }
 }

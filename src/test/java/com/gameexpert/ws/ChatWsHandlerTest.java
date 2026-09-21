@@ -1,24 +1,25 @@
 package com.gameexpert.ws;
 
-import java.time.LocalDateTime;
-import java.util.Map;
 import com.gameexpert.chat.dto.ChatMessageResponse;
 import com.gameexpert.chat.service.ChatDelivery;
 import com.gameexpert.chat.service.ChatRateLimitService;
 import com.gameexpert.chat.service.ChatService;
-import com.gameexpert.ws.handler.ChatWsHandler;
 import com.gameexpert.ws.dto.ChatResponse;
+import com.gameexpert.ws.handler.ChatWsHandler;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.web.socket.WebSocketSession;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.time.LocalDateTime;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class ChatWsHandlerTest {
-    // @Test
+     @Test
     void savesUsingConnectionIdentityAndBuildsResponseFromSavedResult() {
         ChatService service = mock(ChatService.class);
         ChatDelivery delivery = mock(ChatDelivery.class);
