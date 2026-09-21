@@ -64,7 +64,6 @@ public class ChatWsHandler implements WsMessageHandler {
 
 
         return new ChatResponse(
-                "chat",
                 chatMessageResponse.getSender(),
                 chatMessageResponse.getContent(),
                 chatMessageResponse.getCreatedAt()
