@@ -1,7 +1,5 @@
 package com.gameexpert.chat;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import com.gameexpert.chat.controller.WorldChatController;
 import com.gameexpert.chat.dto.ChatMessageResponse;
 import com.gameexpert.chat.service.RecentChatQueryService;
@@ -9,6 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -41,7 +42,7 @@ class RecentChatApiTest {
         verifyNoMoreInteractions(service);
     }
 
-    // @Test
+     @Test
     void usesDefaultLimitAndReturnsEmptyArray() throws Exception {
         when(service.getRecentMessages(7L, 50)).thenReturn(List.of());
         mvc.perform(get("/worlds/7/chats"))
