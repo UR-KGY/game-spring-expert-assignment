@@ -1,14 +1,15 @@
 package com.gameexpert.chat;
 
-import java.util.Map;
 import com.gameexpert.chat.service.LocalChatSender;
 import com.gameexpert.ws.WorldBroadcaster;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.mockito.Mockito.*;
 
 class LocalChatSenderTest {
-    // @Test
+     @Test
     void broadcastsTheProvidedMessageOnceToTheProvidedWorld() {
         WorldBroadcaster broadcaster = mock(WorldBroadcaster.class);
         LocalChatSender sender = new LocalChatSender(broadcaster);
