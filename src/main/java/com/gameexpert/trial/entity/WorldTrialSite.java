@@ -1,21 +1,14 @@
 package com.gameexpert.trial.entity;
 
 import com.gameexpert.engine.raid.RaidLedger;
-import com.gameexpert.engine.trial.persistence.TrialPersistenceCodec;
 import com.gameexpert.engine.trial.TrialSpawnerRuntime;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import java.util.List;
+import com.gameexpert.engine.trial.persistence.TrialPersistenceCodec;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @Entity
@@ -29,7 +22,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WorldTrialSite {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
-    private long revision;
+    @Version private long revision;
     @Column(name = "world_id", nullable = false) private Long worldId;
     @Column(name = "trial_id", nullable = false) private long trialId;
     @Column(name = "block_x", nullable = false) private int x;
