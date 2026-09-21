@@ -1,7 +1,5 @@
 package com.gameexpert.chat.service;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import com.gameexpert.chat.dto.ChatHistoryEntry;
 import com.gameexpert.chat.dto.ChatHistoryPage;
 import com.gameexpert.chat.entity.ChatMessage;
@@ -13,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +40,7 @@ public class ChatHistoryService {
                         message.getCreatedAt()
                 )).toList();
         // TODO Lv 17: 다음 페이지가 있으면 반환한 마지막 항목을, 없으면 null을 선택합니다.
-        ChatHistoryEntry last = null;
+        ChatHistoryEntry last = hasNext ? items.getLast() : null; //hasNext 가 true 라면 items 의 마지막 요소를 가져오고 아니라면 null
         return new ChatHistoryPage(items, hasNext,
                 last == null ? null : last.getCreatedAt(),
                 last == null ? null : last.getId());
