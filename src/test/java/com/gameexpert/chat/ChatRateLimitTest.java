@@ -1,20 +1,6 @@
 package com.gameexpert.chat;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-
 import com.gameexpert.chat.service.ChatRateLimitService;
-import java.time.Duration;
-import java.util.List;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,6 +9,15 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.stream.IntStream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 class ChatRateLimitTest {
     private static final GenericContainer<?> REDIS = new GenericContainer<>(
@@ -48,7 +43,7 @@ class ChatRateLimitTest {
         REDIS.stop();
     }
 
-    // @Test
+     @Test
     void allowsFiveMessagesAndRejectsSixth() {
         ChatRateLimitService service = new ChatRateLimitService(redisTemplate);
         List<Boolean> results = IntStream.range(0, 6)
@@ -65,7 +60,7 @@ class ChatRateLimitTest {
                 .isFalse();
     }
 
-    // @Test
+     @Test
     void subsequentMessagesMustNotExtendTheOriginalWindow() {
         String key = "chat:limit:401";
         redisTemplate.opsForValue().set(key, "1", Duration.ofSeconds(5));
@@ -77,7 +72,7 @@ class ChatRateLimitTest {
                 .isBetween(1L, 5_000L);
     }
 
-    // @Test
+     @Test
     void concurrentMessagesMustNotExceedFive() throws Exception {
         int requestCount = 12;
         String key = "chat:limit:201";
@@ -107,7 +102,7 @@ class ChatRateLimitTest {
         assertThat(redisTemplate.getExpire(key, TimeUnit.MILLISECONDS)).isBetween(1L, 10_000L);
     }
 
-    // @Test
+     @Test
     void acceptsMessagesAgainAfterTheWindowExpires() {
         ChatRateLimitService service = new ChatRateLimitService(redisTemplate);
         String key = "chat:limit:301";
