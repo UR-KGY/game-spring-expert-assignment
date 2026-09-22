@@ -235,3 +235,155 @@ public class PlayerService {
 }
 
 ```
+
+## 4. 월드 생성
+worldOperations.duringCreation() 메서드  //추측 상 월드를 만드는 동안 조건을 설정하는 메서드
+의 매개변수에는 람다식이 들어간다. (Supplier<T> action) 매개변수는 람다식을 넣는 매개변수
+
+worldRepository 에서 현재 존재하는 월드 수를 가져오고 최대 월드 개수(3개) 를 초과하면 예외를 던지고
+아니라면 월드 생성을 준비하게 된다.
+
+```JAVA
+
+    public <T> T duringCreation(Supplier<T> action) {
+        worldCreationLock.lock();
+        boolean releaseAfterTransaction = false;
+        try {
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        worldCreationLock.unlock();
+                    }
+                });
+                releaseAfterTransaction = true;
+            }
+            return action.get();
+        } finally {
+            if (!releaseAfterTransaction) worldCreationLock.unlock();
+        }
+    }
+```
+
+
+
+
+```JAVA
+
+    @Transactional
+    public CommittedWorldCreation createWorld(CreateWorldRequest request) {
+        if (!baselineReadiness.isReady()) { 
+            throw new ServiceUnavailableException("WORLD_BASELINE_INITIALIZING");
+        }
+        return worldOperations.duringCreation(() -> {
+            if (worldRepository.countRootWorlds() >= MAX_WORLDS) { //MAX_WORLD를 기준으로 이미 최대치의 월드가 있다면
+                throw new ConflictException("WORLD_LIMIT_REACHED");
+            }
+
+            return createPreparedWorld(request);
+            // TODO Lv 4: duringCreation() 안에서 기본 월드 3개 제한을 검사하고 createPreparedWorld(request)를 호출합니다
+            //  throw new UnsupportedOperationException("Lv 4: 월드 생성을 구현하세요.");
+        });
+
+```
+
+## 5. 채팅 저장과 내역 조회 
+worldRepository.findById(worldId) 로 요청으로 받은 월드가 존재하는지 여부를 확인
+
+월드가 존재한다면 chatMessageRepository.save()로 요청으로 받은 데이터를 매개변수로 넣어 db에 저장하고
+저장한 데이터를 반환 받는다.
+
+이후엔 반환받은 데이터를 가지고 응답 dto 를 만들어 반환
+
+```JAVA
+@Transactional
+    public ChatMessageResponse saveMessage(Long worldId, String sender, String content) {
+        // TODO Lv 5: 채팅을 저장하고 savedResponse(worldId, saved)의 결과를 반환합니다.
+        World world = worldRepository.findById(worldId)
+                .orElseThrow(() -> new NotFoundException("WORLD_NOT_FOUND"));
+
+        ChatMessage chatMessage = chatMessageRepository.save(new ChatMessage(
+                world, sender, content
+        ));
+
+        return new ChatMessageResponse(
+                chatMessage.getSenderNickname(), chatMessage.getContent(), chatMessage.getCreatedAt()
+        );
+
+//        throw new UnsupportedOperationException("Lv 5: 채팅 저장을 구현하세요.");
+    }
+```
+
+## 6.최근 채팅 조회 api 구현
+
+명세서 적힌대로 구현
+@GetMapping("/worlds/{worldId}/chats")
+@PathVariable Long worldId 
+@RequestParam(defaultValue = "50") int limit  //default 값을 설정하기 위해 RequestParam 으로 기본값 설정
+
+
+```
+//전
+@RestController
+@RequiredArgsConstructor
+public class WorldChatController {
+
+    private final RecentChatQueryService chatService;
+
+    // TODO Lv 6: API 명세에 맞는 요청 매핑과 응답을 구현합니다.
+    public ResponseEntity<List<ChatMessageResponse>> chats(Long worldId, int limit) {
+        return ResponseEntity.ok(List.of());
+    }
+}
+
+//후
+@RestController
+@RequiredArgsConstructor
+public class WorldChatController {
+
+    private final RecentChatQueryService chatService;
+
+    @GetMapping("/worlds/{worldId}/chats")
+    // TODO Lv 6: API 명세에 맞는 요청 매핑과 응답을 구현합니다.
+    public ResponseEntity<List<ChatMessageResponse>> chats(@PathVariable Long worldId,@RequestParam(defaultValue = "50") int limit ) {
+        return ResponseEntity.status(HttpStatus.OK).body(chatService.getRecentMessages(worldId,limit));
+    }
+}
+```
+
+7. HandShakeInterceptor 수정
+
+웹소켓을 연결하기 전 데이터를 검증하는 로직을 수정
+요청으로 받은 닉네임으로 각각의 db에서 플레이어와 월드를 조회 
+만약 등록된 플레이어와 월드가 아니라면 return false를 하는 대신 
+return true 로 하되 attributes.put(ATTR_ERROR_CODE, 4001);처럼 attributes 에 오류가 있다는 것을 알려준다.
+이렇게 하는 이유는 return false 로 연결조차 실패한다면 무엇이 오류인지 알 수 없기 때문에 
+클라이언트 쪽에서 오류를 확인하고 다시 제대로 된 요청을 보내게 하기 위함이다.
+
+
+```
+ // TODO Lv 7: 닉네임으로 플레이어를 조회합니다. 없으면 null을 사용합니다.
+        Player player = playerRepository.findByNickname(nickname).orElse(null);
+        if (player == null) {
+            attributes.put(ATTR_ERROR_CODE, 4000);
+            return true;
+        }
+
+// TODO Lv 7: worldId로 월드를 조회합니다. 없으면 null을 사용합니다.
+        World world = worldRepository.findById(worldId).orElse(null);
+        if (world == null || worldRepository.isDimensionChild(worldId)) {
+            attributes.put(ATTR_ERROR_CODE, 4001);
+            return true;
+        }
+
+// TODO Lv 7: nickname과 worldId를 ATTR_NICKNAME, ATTR_WORLD_ID 키로 attributes에 저장합니다.
+        attributes.put(ATTR_NICKNAME,nickname);
+        attributes.put(ATTR_WORLD_ID,worldId);
+
+        attributes.put(ATTR_PLAYER_ID, player.getId());
+        attributes.put(ATTR_WORLD_SEED, (int) world.getSeed());
+        attributes.put(ATTR_WORLD_DIFFICULTY, world.getDifficulty());
+        return true;
+
+```
+
